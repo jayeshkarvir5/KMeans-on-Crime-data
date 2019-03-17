@@ -1,0 +1,7 @@
+<p>This is index!</p>
+{{ df | safe}}
+{% for obj in qs%}
+    {{ obj.State }} {{ obj.District}}
+    <br>
+{% endfor %}
+<img src="data:image/png;base64,{{graphic|safe}}">
