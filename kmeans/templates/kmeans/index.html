@@ -1,7 +1,11 @@
 <p>This is index!</p>
+<form action="{% url 'state' %}" method="POST">
+    {% csrf_token %}
+    <input type="text" name="option" value="">
+    <button type="submit" name="btn">Submit</button>
+</form>
 {{ df | safe}}
 {% for obj in qs%}
     {{ obj.State }} {{ obj.District}}
     <br>
 {% endfor %}
-<img src="data:image/png;base64,{{graphic|safe}}">
