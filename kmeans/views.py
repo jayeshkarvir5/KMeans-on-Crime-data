@@ -1,9 +1,10 @@
+from __future__ import print_function
 from django.http import HttpResponse
 from django.shortcuts import render
 import pandas as pd
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import scale
+from sklearn.preprocessing import scale, StandardScaler
 from numpy import random, float, array
 import numpy as np
 import seaborn as sns
@@ -31,13 +32,13 @@ def index(request):
 
 def selected_option(request):
     state = request.POST.get('option')
+    request.session['state'] = state
     qs = Item.objects.filter(State__startswith=state)
     df = pd.read_csv("D:/Projects/DM_miniproject/kmeans/data_for_mini-project.csv")
     df = df[(df.State == state) & (df.District != "Total")]
     X = df[['Murder', 'Attempt_to_commit_Murder', 'Rape', 'Kidnapping_Abduction', 'Robbery', 'Burglary',
             'Theft', 'Riots', 'Cheating', 'Hurt', 'Dowry_Deaths', 'Assault_on_Women', 'Sexual_Harassment',
             'Stalking', 'Death_by_Negligence', 'Extortion', 'Incidence_of_Rash_Driving']]
-    from sklearn.preprocessing import StandardScaler
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     cluster_range = range(1, 20)  # take care of the size for different states
@@ -71,8 +72,37 @@ def selected_option(request):
 
 def clustering(request):
     size = request.POST.get('k')
+    state = request.session['state']
+    request.session['size'] = size
+    df = pd.read_csv("D:/Projects/DM_miniproject/kmeans/data_for_mini-project.csv")
+    df = df[(df.State == state) & (df.District != "Total")]
+    X = df[['Murder', 'Attempt_to_commit_Murder', 'Rape', 'Kidnapping_Abduction', 'Robbery', 'Burglary',
+            'Theft', 'Riots', 'Cheating', 'Hurt', 'Dowry_Deaths', 'Assault_on_Women', 'Sexual_Harassment',
+            'Stalking', 'Death_by_Negligence', 'Extortion', 'Incidence_of_Rash_Driving']]
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    clusters = KMeans(int(size))
+    clusters.fit(X_scaled)
+    df['Crime_clusters'] = clusters.labels_
+    df = df.sort_values(by=['Crime_clusters'], ascending=True)
+    centers = np.array(clusters.cluster_centers_)
+    plt.figure(figsize=(10, 10))
+    plt.scatter(centers[:, 0], centers[:, 1], marker="x", color='r')
+    plt.scatter(df.iloc[:, 2], df.iloc[:, 3], c=[
+                plt.cm.get_cmap("Spectral")(float(i) / 3) for i in clusters.labels_])
+    plt.tight_layout()
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+    graphic = base64.b64encode(image_png)
+    graphic = graphic.decode('utf-8')
+    pylab.close()
     context = {
         'k': size,
+        'df': df.to_html(),
+        'graphic': graphic,
     }
     return render(request, 'kmeans/cluster_formation.html', context)
 

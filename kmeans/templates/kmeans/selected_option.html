@@ -1,8 +1,8 @@
 <h4>Applying Kmeans on state</h4>
 {{ df | safe }}
-{% for val in qs %}
+<!-- {% for val in qs %}
     <h5>{{ val.State }} {{ val.Total }}</h5>
-{% endfor %}
+{% endfor %} -->
 <img src="data:image/png;base64,{{graphic|safe}}">
 <form action="{% url 'kval' %}" method="POST">
     {% csrf_token %}
